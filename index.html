@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Geoportal Energía - Campo</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--pri:#064e3b;--green:#16a34a;--blue:#2563eb;--red:#dc2626;--orange:#f59e0b;--bg:#f8fafc;--text:#172033;--muted:#64748b;--border:#dbe3ea;--soft:#eef7f2}
+html,body{height:100%;overflow:hidden}body{font-family:Arial,sans-serif;background:#0f172a;color:var(--text)}button,input,select,textarea{font-family:inherit}
+#header{height:46px;background:linear-gradient(135deg,#052e16,#166534);color:white;display:flex;align-items:center;gap:8px;padding:7px 12px;box-shadow:0 2px 10px #0005;z-index:700;position:relative}#header .ico{font-size:20px}#header b{font-size:15px}#header span{font-size:10.5px;opacity:.85}
+#main{height:calc(100dvh - 46px);display:flex;background:#0f172a}#map{flex:1;min-height:260px}.panel{width:430px;background:#fff;border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}.top{padding:10px 12px;background:#fff;border-bottom:1px solid #eef2f7}.content{flex:1;overflow-y:auto;background:#fff;padding:10px 12px 14px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}.footer{padding:10px 12px;background:#fff;border-top:1px solid var(--border);flex-shrink:0;box-shadow:0 -5px 16px #00000010}
+.btn{width:100%;border:0;border-radius:13px;padding:12px 14px;font-size:15px;font-weight:900;color:white;background:var(--pri);margin:4px 0;min-height:46px}.btn.big{font-size:16px;min-height:50px}.btn.blue{background:var(--blue)}.btn.gray{background:#475569}.btn.line{background:#fff;color:var(--pri);border:2px solid var(--pri)}.btn:active{transform:scale(.99)}.btnrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.coord{font-size:11.5px;line-height:1.35;color:var(--muted);background:#f1f5f9;border-left:4px solid var(--green);border-radius:10px;padding:8px 10px;margin-top:7px}.coord.bad{border-left-color:var(--red)}
+.section-hidden{display:none!important}.label{font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 6px}.input,.select,.textarea{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:12px;font-size:15px;background:white;margin-bottom:9px}.textarea{min-height:90px;resize:vertical}.input:focus,.select:focus,.textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px #16a34a22}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.card{border:1px solid var(--border);border-radius:16px;background:#fff;padding:12px;margin:10px 0;box-shadow:0 1px 6px #0000000a}.card-title{font-size:15px;font-weight:900;color:var(--pri);margin-bottom:8px;display:flex;align-items:center;gap:6px}.hint{font-size:11.5px;color:var(--muted);line-height:1.35;margin:3px 0 8px}.badge{display:inline-block;padding:5px 8px;border-radius:999px;background:#e2e8f0;color:#334155;font-size:11px;font-weight:900;margin-bottom:7px}
+.activity-grid{display:grid;grid-template-columns:1fr;gap:8px}.activity{width:100%;display:flex;align-items:center;gap:10px;text-align:left;background:#fff;border:1.7px solid var(--border);border-radius:16px;padding:11px 12px;min-height:56px;color:var(--text);font-weight:900}.activity .dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;background:#e2e8f0;flex:0 0 26px}.activity .txt{flex:1}.activity small{display:block;color:var(--muted);font-size:11px;font-weight:700;margin-top:2px}.activity.active{border-color:var(--green);background:#effaf3;box-shadow:0 0 0 3px #16a34a18}.activity.active .dot{background:var(--green);color:#fff}
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}.chip{border:1.5px solid var(--border);border-radius:12px;padding:10px 9px;font-size:13px;font-weight:800;background:#fff;display:flex;gap:8px;align-items:center;min-height:44px}.chip input{accent-color:var(--green);width:17px;height:17px;flex:0 0 17px}.chip:has(input:checked){border-color:var(--green);background:#e8f5ee;color:#052e16}
+.photo-card{border:1.5px dashed var(--border);border-radius:13px;padding:10px;margin-bottom:9px;background:#f8fafc}.photo-card b{font-size:13px}.photo-card input{width:1px;height:1px;opacity:0;position:absolute}.camera-btn{display:block;text-align:center;background:#e8f5ee;border:2px solid var(--green);color:var(--pri);font-weight:900;border-radius:11px;padding:12px;margin-top:8px;font-size:14px}.photo-item{display:flex;align-items:center;gap:7px;justify-content:space-between;border:1px solid var(--border);border-radius:10px;padding:8px;margin:6px 0;background:#fff;font-size:12px}.photo-item button{border:0;background:var(--red);color:#fff;border-radius:8px;padding:6px 9px;font-weight:900}.mini{font-size:11.5px;color:var(--muted)}
+.mat-row{display:grid;grid-template-columns:1fr 74px 34px;gap:6px;margin-bottom:6px}.mat-row input{padding:10px;border:1px solid var(--border);border-radius:9px}.mat-row button{border:0;border-radius:8px;background:var(--red);color:white;font-weight:900}.toast{display:none;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#052e16;color:#fff;padding:12px 18px;border-radius:22px;font-weight:900;font-size:13px;z-index:9999;max-width:92vw;text-align:center}
+@media(max-width:800px){#header{height:44px}#main{height:calc(100dvh - 44px);flex-direction:column}#map{height:27dvh;min-height:190px;flex:none}.panel{width:100%;height:73dvh;border-left:0;border-top:1px solid var(--border);border-radius:16px 16px 0 0;margin-top:-10px;z-index:500}.top{padding:8px 10px}.content{padding:8px 10px 18px}.footer{padding:9px 10px calc(9px + env(safe-area-inset-bottom))}.btn{font-size:14px;min-height:44px;border-radius:12px}.btn.big{font-size:15px;min-height:48px}.input,.select,.textarea{font-size:15px;min-height:45px}.chips{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.card{padding:11px;margin:9px 0}.activity{min-height:52px;padding:10px 11px}.activity .dot{width:24px;height:24px;font-size:12px;flex-basis:24px}.toast{bottom:calc(88px + env(safe-area-inset-bottom))}.leaflet-control-attribution{display:none}}
+</style>
+</head>
+<body>
+<div id="header"><div class="ico">⚡</div><div><b>Geoportal Energía</b><br><span>Colector móvil de campo</span></div></div>
+<div id="main">
+  <div id="map"></div>
+  <div class="panel">
+    <div class="top">
+      <button id="btnCrearPunto" class="btn big blue" type="button">➕ Crear punto con ubicación actual</button>
+      <div id="coord" class="coord">Primero captura el punto. Luego selecciona el tipo de reporte.</div>
+    </div>
+    <div class="content" id="scrollArea">
+      <div id="actividadBox" class="card section-hidden">
+        <div class="card-title">Tipo de reporte</div>
+        <div class="activity-grid">
+          <button class="activity" type="button" data-act="inspeccion"><span class="dot">🔎</span><span class="txt">Inspección técnica<small>Revisión, introducción, poste, transformador o línea</small></span></button>
+          <button class="activity" type="button" data-act="mantenimiento"><span class="dot">🛠️</span><span class="txt">Mantenimiento<small>Trabajo ejecutado, cambio, ajuste, poda o reparación</small></span></button>
+          <button class="activity" type="button" data-act="falla"><span class="dot">⚠️</span><span class="txt">Incidencia / falla<small>Emergencia, sin energía, riesgo o daño</small></span></button>
+        </div>
+      </div>
+      <div id="formulario" class="section-hidden"></div>
+      <div id="fotosCard" class="card section-hidden">
+        <div class="card-title">Fotografías</div>
+        <p class="hint">Toma una foto principal. Puedes agregar más si es necesario.</p>
+        <div id="fotosContainer"></div>
+        <button id="btnAgregarFoto" class="btn line" type="button">+ Agregar otra foto</button>
+        <div id="listaFotos" class="mini">Sin fotografías tomadas.</div>
+      </div>
+      <div id="cierreCard" class="card section-hidden">
+        <div class="card-title">Cierre</div>
+        <textarea id="observaciones" class="textarea" placeholder="Observaciones breves de campo"></textarea>
+        <div class="grid2">
+          <select id="prioridad" class="select"><option>1 - Baja</option><option>2 - Media baja</option><option>3 - Media</option><option>4 - Alta</option><option>5 - Crítica</option></select>
+          <select id="estado_final" class="select"><option>Operativo</option><option>Requiere seguimiento</option><option>Pendiente de reparación</option><option>Fuera de servicio</option></select>
+        </div>
+        <input id="firma_tecnico" class="input" placeholder="Técnico / cuadrilla">
+      </div>
+    </div>
+    <div class="footer"><div class="btnrow"><button id="btnLimpiar" class="btn gray" type="button">🧹 Nuevo</button><button id="btnGuardar" class="btn" type="button">💾 Guardar</button></div></div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const SUPABASE_URL='https://onapizevwccsfthtmynj.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9uYXBpemV2d2Njc2Z0aHRteW5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODE4NDMsImV4cCI6MjA5Njg1Nzg0M30.swwiwmVsuAakSvGG-_JE00xe7x5WWsIo6V0209pArpg';
+const TABLE_NAME='reportes_energia_puntos';
+const BUCKET_FOTOS='energia-fotos';
+const supabase=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false}});
+const map=L.map('map',{zoomControl:false}).setView([14.6349,-90.5069],8);
+L.control.zoom({position:'topright'}).addTo(map);
+L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{attribution:'© Google',maxZoom:21}).addTo(map);
+let marker=null,geom=null,alt=null,toastTimer=null,act=null,photoCount=0;
+const puntosGuardados=L.layerGroup().addTo(map);
+const actividadLabels={inspeccion:'Inspección técnica',mantenimiento:'Mantenimiento',falla:'Incidencia / falla'};
+const $=id=>document.getElementById(id); const val=id=>($(id)?.value||'').trim();
+function toast(t,ms=3500){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.style.display='none',ms)}
+function coord(t,bad=false){const e=$('coord');e.textContent=t;e.classList.toggle('bad',bad)}
+function goTo(el){setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),120)}
+function setPoint(lat,lng,a=null,zoom=true){alt=a;if(marker)map.removeLayer(marker);marker=L.marker([lat,lng],{draggable:true}).addTo(map);marker.on('dragend',()=>{const p=marker.getLatLng();setPoint(p.lat,p.lng,alt,false)});geom={type:'Point',coordinates:[lng,lat]};if(zoom)map.setView([lat,lng],18);coord(`✅ Punto listo: ${lat.toFixed(6)}, ${lng.toFixed(6)}${a!=null?' | Alt. '+Number(a).toFixed(1)+' m':''}. Selecciona tipo de reporte.`);$('actividadBox').classList.remove('section-hidden');goTo($('actividadBox'));toast('✅ Punto creado. Selecciona el tipo de reporte.')}
+function crearPuntoGPS(){if(!navigator.geolocation){coord('GPS no disponible. Toca el mapa para colocar el punto.',true);return}coord('📍 Obteniendo ubicación actual...');navigator.geolocation.getCurrentPosition(p=>setPoint(p.coords.latitude,p.coords.longitude,p.coords.altitude,true),e=>{coord('No se pudo obtener GPS. Toca el mapa para colocar el punto.',true);toast('⚠️ '+e.message,5000)},{enableHighAccuracy:true,timeout:15000,maximumAge:0})}
+map.on('click',e=>setPoint(e.latlng.lat,e.latlng.lng,alt,false));
+document.querySelectorAll('.activity').forEach(b=>b.onclick=()=>{if(!geom){toast('⚠️ Primero crea el punto.');return}act=b.dataset.act;document.querySelectorAll('.activity').forEach(x=>x.classList.toggle('active',x===b));renderForm();$('formulario').classList.remove('section-hidden');$('fotosCard').classList.remove('section-hidden');$('cierreCard').classList.remove('section-hidden');if(photoCount===0)agregarFoto();goTo($('formulario'));});
+function chip(v){return `<label class="chip"><input type="checkbox" value="${v}">${v}</label>`}
+function chips(arr){return `<div class="chips" id="checklist">${arr.map(chip).join('')}</div>`}
+function materialesHTML(){return `<div class="label">Materiales utilizados</div><div id="materiales"></div><button id="btnMaterial" class="btn line" type="button">+ Agregar material</button>`}
+function addMat(){const d=document.createElement('div');d.className='mat-row';d.innerHTML=`<input placeholder="Material"><input placeholder="Cant." type="number" step="0.01"><button type="button">×</button>`;d.querySelector('button').onclick=()=>d.remove();$('materiales')?.appendChild(d)}
+function renderForm(){const forms={
+inspeccion:`<div class="card"><span class="badge">🔎 Inspección técnica</span><div class="card-title">Checklist de revisión</div><div class="grid2"><input id="id_poste" class="input" placeholder="ID poste / referencia"><input id="sector" class="input" placeholder="Sector / tramo"></div><div class="grid2"><select id="tipo_estructura" class="select"><option>Poste concreto</option><option>Poste madera</option><option>Poste metálico</option><option>Torre</option><option>Transformador</option><option>Línea / tramo</option></select><select id="nivel_tension" class="select"><option>Baja tensión</option><option>Media tensión</option><option>Alta tensión</option></select></div>${chips(['Poste en buen estado','Transformador en buen estado','Conductores en buen estado','Aisladores en buen estado','Herrajes completos','Vegetación cercana','Acceso disponible','Requiere intervención','Requiere cambio de poste','Requiere cambio de transformador'])}</div>`,
+mantenimiento:`<div class="card"><span class="badge">🛠️ Mantenimiento</span><div class="card-title">Trabajo ejecutado</div><div class="grid2"><input id="id_poste" class="input" placeholder="ID poste / tramo"><input id="sector" class="input" placeholder="Sector"></div><div class="grid2"><input id="tiempo_trabajo" class="input" type="number" placeholder="Tiempo min"><select id="estado_trabajo" class="select"><option>Trabajo terminado</option><option>Trabajo parcial</option><option>Pendiente por material</option><option>Pendiente por seguridad</option></select></div>${chips(['Cambio de poste','Cambio de transformador','Cambio de conductor','Cambio de aislador','Ajuste de herrajes','Reparación de retenida','Limpieza de línea','Poda / liberación','Corrección de empalme','Trabajo terminado'])}${materialesHTML()}</div>`,
+falla:`<div class="card"><span class="badge">⚠️ Incidencia / falla</span><div class="card-title">Reporte operativo</div><div class="grid2"><input id="id_poste" class="input" placeholder="ID poste / referencia"><input id="sector" class="input" placeholder="Sector afectado"></div><div class="grid2"><input id="usuarios_afectados" class="input" type="number" placeholder="Usuarios afectados"><select id="riesgo_personas" class="select"><option>Sin riesgo a personas</option><option>Riesgo bajo</option><option>Riesgo alto</option><option>Riesgo crítico</option></select></div>${chips(['Sin energía','Bajo voltaje','Cortocircuito','Conductor caído','Poste dañado','Transformador dañado','Aislador roto','Riesgo para personas','Riesgo para vehículos','Requiere atención urgente'])}</div>`};
+$('formulario').innerHTML=forms[act]||'';if($('btnMaterial')){$('btnMaterial').onclick=addMat;addMat();}}
+function agregarFoto(){photoCount++;const id='foto_'+photoCount;const d=document.createElement('div');d.className='photo-card';d.innerHTML=`<b>${photoCount===1?'Foto principal':'Foto adicional '+photoCount}</b><label class="camera-btn" for="${id}">📷 Tomar foto</label><input id="${id}" class="foto-input" type="file" accept="image/*" capture="environment">`; $('fotosContainer').appendChild(d);$(id).addEventListener('change',actualizarFotos)}
+function actualizarFotos(){const files=Array.from(document.querySelectorAll('.foto-input')).map(i=>i.files?.[0]?.name).filter(Boolean);$('listaFotos').innerHTML=files.length?files.map(n=>`<div class="photo-item"><span>📎 ${n}</span></div>`).join(''):'Sin fotografías tomadas.'}
+function checks(){return Array.from(document.querySelectorAll('#checklist input:checked')).map(i=>i.value)}
+function materiales(){return Array.from(document.querySelectorAll('#materiales .mat-row')).map(r=>{const i=r.querySelectorAll('input');return{material:i[0].value.trim(),cantidad:i[1].value?Number(i[1].value):null}}).filter(x=>x.material||x.cantidad)}
+function camposFuncion(){const els=Array.from($('formulario').querySelectorAll('input,select,textarea')).filter(el=>el.id);const o={};els.forEach(el=>{if(el.type==='checkbox'||el.type==='file')return;o[el.id]=el.type==='number'&&el.value!==''?Number(el.value):el.value});o.checklist=checks();o.materiales=materiales();return o}
+async function subirFotos(){const fotos=[];const inputs=Array.from(document.querySelectorAll('.foto-input'));for(let i=0;i<inputs.length;i++){const f=inputs[i].files?.[0];if(!f)continue;const tipo=i===0?'foto_principal':'foto_adicional';const clean=f.name.replace(/[^a-zA-Z0-9._-]/g,'_');const path=`${Date.now()}_${tipo}_${Math.random().toString(36).slice(2)}_${clean}`;const up=await supabase.storage.from(BUCKET_FOTOS).upload(path,f,{upsert:false});if(up.error){fotos.push({tipo,nombre:f.name,error:up.error.message});continue}const pub=supabase.storage.from(BUCKET_FOTOS).getPublicUrl(path);fotos.push({tipo,nombre:f.name,path,url:pub.data.publicUrl})}return fotos}
+function wkt(){if(!geom)return null;const[x,y]=geom.coordinates;return`SRID=4326;POINT(${x} ${y})`}
+async function cargarPuntosExistentes(){const {data,error}=await supabase.from(TABLE_NAME).select('id,actividad,lat,lng,estado_final,prioridad,datos_funcion,created_at').order('created_at',{ascending:false}).limit(500);if(error)return;puntosGuardados.clearLayers();(data||[]).forEach(r=>{if(r.lat==null||r.lng==null)return;const info=r.datos_funcion||{};puntosGuardados.addLayer(L.circleMarker([r.lat,r.lng],{radius:6,color:'#fff',weight:2,fillColor:'#2563eb',fillOpacity:1}).bindPopup(`<b>${r.actividad||'Punto eléctrico'}</b><br>${info.id_poste||info.sector||''}<br>${r.estado_final||''}<br>${r.prioridad||''}`))})}
+async function guardar(){if(!geom){toast('⚠️ Primero crea el punto.');return}if(!act){toast('⚠️ Selecciona tipo de reporte.');return}toast('💾 Guardando punto...',9000);const fotos=await subirFotos();const foto_principal=fotos.find(f=>f.url)?.url||null;const reg={actividad_id:act,actividad:actividadLabels[act],lat:geom.coordinates[1],lng:geom.coordinates[0],altitud_m:alt,datos_funcion:camposFuncion(),fotos,foto_principal,hallazgos:val('observaciones'),recomendaciones:'',prioridad:val('prioridad'),estado_final:val('estado_final'),firma_tecnico:val('firma_tecnico'),geom:wkt(),fecha_hora:new Date().toISOString()};const {error}=await supabase.from(TABLE_NAME).insert([reg]);if(error){toast('❌ '+error.message,9000);return}toast('✅ Punto guardado.');await cargarPuntosExistentes();limpiar(true)}
+function limpiar(full=false){act=null;photoCount=0;document.querySelectorAll('.activity').forEach(x=>x.classList.remove('active'));['observaciones','firma_tecnico'].forEach(id=>{if($(id))$(id).value=''});$('formulario').innerHTML='';$('fotosContainer').innerHTML='';actualizarFotos();$('actividadBox').classList.add('section-hidden');$('formulario').classList.add('section-hidden');$('fotosCard').classList.add('section-hidden');$('cierreCard').classList.add('section-hidden');if(full&&marker){map.removeLayer(marker);marker=null;geom=null;coord('Primero captura el punto. Luego selecciona el tipo de reporte.')}}
+$('btnCrearPunto').onclick=crearPuntoGPS;$('btnAgregarFoto').onclick=agregarFoto;$('btnGuardar').onclick=guardar;$('btnLimpiar').onclick=()=>limpiar(true);cargarPuntosExistentes();
+</script>
+</body>
+</html>
