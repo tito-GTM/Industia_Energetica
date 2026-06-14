@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Geoportal Energía - Campo</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--pri:#064e3b;--green:#16a34a;--blue:#2563eb;--red:#dc2626;--gray:#64748b;--bg:#f8fafc;--line:#dbe3ea;--txt:#102033;--soft:#eef7f1}
+html,body{width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#fff;color:var(--txt)}
+button,input,textarea,select{font-family:inherit;font-size:16px}
+#app{height:100dvh;display:flex;flex-direction:column;background:#fff}
+#header{height:54px;flex:none;background:linear-gradient(135deg,#064e3b,#15803d);color:#fff;display:flex;align-items:center;gap:10px;padding:8px 14px;box-shadow:0 2px 8px #0004;z-index:900}
+.logo{font-size:22px}.title{font-size:16px;font-weight:900}.sub{font-size:11px;opacity:.9;margin-top:1px}
+#mapWrap{height:42dvh;min-height:260px;flex:none;position:relative;background:#e5e7eb}
+#map{height:100%;width:100%}.mapHint{position:absolute;left:12px;right:12px;bottom:12px;z-index:500;background:#ffffffee;border-radius:14px;padding:9px 12px;font-size:13px;color:#334155;box-shadow:0 2px 10px #0002;border-left:4px solid var(--green)}
+#sheet{flex:1;min-height:0;background:#fff;border-radius:18px 18px 0 0;margin-top:-14px;z-index:600;display:flex;flex-direction:column;border-top:1px solid var(--line);box-shadow:0 -3px 12px #0001;overflow:hidden}
+#scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 110px;background:#fff}
+.footer{flex:none;position:sticky;bottom:0;background:#fff;padding:10px 14px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);box-shadow:0 -2px 10px #0001;z-index:800}
+.btn{width:100%;border:0;border-radius:14px;min-height:50px;padding:12px 14px;font-weight:900;color:#fff;background:var(--pri);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.btn.blue{background:var(--blue)}.btn.gray{background:#475569}.btn.red{background:var(--red)}.btn.line{background:#fff;color:var(--pri);border:2px solid var(--pri)}.btn:active{transform:scale(.99)}.btnrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.section{border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:14px;background:#fff;box-shadow:0 1px 5px #0000000b}.sectionTitle{font-size:18px;font-weight:900;color:var(--pri);margin-bottom:10px}.hint{font-size:13px;color:var(--gray);line-height:1.35;margin:6px 0 10px}.status{background:#f1f5f9;border-left:4px solid var(--green);border-radius:12px;padding:10px 12px;font-size:13px;color:#334155;line-height:1.35;margin-top:8px}.status.bad{border-left-color:var(--red)}
+.reportGrid{display:grid;gap:10px}.reportOpt{border:2px solid var(--line);border-radius:16px;padding:13px;display:grid;grid-template-columns:38px 1fr;gap:10px;align-items:center;background:#fff}.reportOpt.selected{border-color:var(--green);background:#f0fdf4}.ico{width:36px;height:36px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:18px}.reportOpt b{display:block;font-size:15px;margin-bottom:2px}.reportOpt span{font-size:13px;color:var(--gray);font-weight:700;line-height:1.25}
+.input,.textarea,.select{width:100%;border:1.5px solid var(--line);border-radius:14px;padding:12px 13px;margin-bottom:10px;background:#fff;color:var(--txt);outline:none}.textarea{min-height:78px;resize:vertical}.input:focus,.textarea:focus,.select:focus{border-color:var(--green);box-shadow:0 0 0 3px #16a34a22}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.label{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:var(--gray);margin:10px 0 7px}
+.checks{display:grid;grid-template-columns:1fr;gap:8px;margin:8px 0 10px}.check{border:1.5px solid var(--line);border-radius:13px;padding:11px;display:flex;gap:9px;align-items:flex-start;background:#fff;font-weight:800;font-size:14px}.check input{width:18px;height:18px;accent-color:var(--green);margin-top:1px}.check:has(input:checked){border-color:var(--green);background:#f0fdf4;color:#065f46}.small{font-size:12px;color:var(--gray);display:block;font-weight:600;margin-top:2px}
+.matRow{display:grid;grid-template-columns:1fr 80px 34px;gap:7px;margin-bottom:7px}.matRow input{border:1px solid var(--line);border-radius:10px;padding:10px}.matRow button{border:0;border-radius:10px;background:var(--red);color:#fff;font-weight:900}
+.photoList{display:grid;gap:8px}.photoItem{border:1.5px dashed var(--line);border-radius:14px;background:#f8fafc;padding:11px}.photoItem input{position:absolute;opacity:0;width:1px;height:1px}.cameraLabel{display:flex;align-items:center;justify-content:center;gap:8px;border:2px solid var(--green);background:#ecfdf5;color:#065f46;border-radius:12px;padding:12px;font-weight:900}.filename{font-size:12px;color:var(--gray);margin-top:7px;word-break:break-word}.hidden{display:none!important}.toast{display:none;position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#052e16;color:#fff;padding:12px 16px;border-radius:999px;font-size:13px;font-weight:900;z-index:9999;max-width:92vw;text-align:center;box-shadow:0 4px 14px #0004}
+@media(min-width:850px){#app{display:grid;grid-template-columns:1fr 430px;grid-template-rows:54px 1fr}#header{grid-column:1/3}#mapWrap{height:auto;min-height:0;grid-column:1;grid-row:2}.mapHint{max-width:420px}#sheet{grid-column:2;grid-row:2;margin-top:0;border-radius:0;border-left:1px solid var(--line)}#scroll{padding-bottom:120px}.checks{grid-template-columns:1fr 1fr}}
+@media(max-width:390px){#mapWrap{height:38dvh;min-height:230px}.section{padding:12px}.reportOpt{grid-template-columns:34px 1fr;padding:11px}.ico{width:32px;height:32px;font-size:16px}.btn{min-height:48px}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="header"><div class="logo">⚡</div><div><div class="title">Geoportal Energía</div><div class="sub">Colector móvil de campo</div></div></header>
+  <div id="mapWrap"><div id="map"></div><div id="mapHint" class="mapHint">Primero captura el punto. Luego selecciona el tipo de reporte.</div></div>
+  <section id="sheet">
+    <div id="scroll">
+      <div class="section" id="puntoSection">
+        <button id="btnCrearPunto" class="btn blue" type="button">➕ Crear punto con ubicación actual</button>
+        <div id="coord" class="status">Toca el botón para capturar GPS. También puedes tocar el mapa para ajustar el punto.</div>
+      </div>
+
+      <div class="section hidden" id="actividadSection">
+        <div class="sectionTitle">Tipo de reporte</div>
+        <div class="reportGrid">
+          <button class="reportOpt" type="button" data-act="inspeccion"><div class="ico">🔎</div><div><b>Inspección técnica</b><span>Revisión, introducción, poste, transformador o línea</span></div></button>
+          <button class="reportOpt" type="button" data-act="mantenimiento"><div class="ico">🛠️</div><div><b>Mantenimiento</b><span>Trabajo ejecutado, cambio, ajuste, poda o reparación</span></div></button>
+          <button class="reportOpt" type="button" data-act="falla"><div class="ico">⚠️</div><div><b>Incidencia / falla</b><span>Emergencia, sin energía, riesgo o daño</span></div></button>
+        </div>
+      </div>
+
+      <div id="formSection" class="hidden"></div>
+
+      <div class="section hidden" id="fotoSection">
+        <div class="sectionTitle">Fotografías</div>
+        <p class="hint">Toma una foto principal. Puedes agregar más si es necesario.</p>
+        <div id="photoList" class="photoList"></div>
+        <button id="btnAddPhoto" class="btn line" type="button">➕ Agregar otra foto</button>
+      </div>
+    </div>
+    <div class="footer"><div class="btnrow"><button id="btnNuevo" class="btn gray" type="button">🧹 Nuevo</button><button id="btnGuardar" class="btn" type="button">💾 Guardar</button></div></div>
+  </section>
+</div>
+<div id="toast" class="toast"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const SUPABASE_URL='https://onapizevwccsfthtmynj.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9uYXBpemV2d2Njc2Z0aHRteW5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyODE4NDMsImV4cCI6MjA5Njg1Nzg0M30.swwiwmVsuAakSvGG-_JE00xe7x5WWsIo6V0209pArpg';
+const TABLE_NAME='reportes_energia_puntos';
+const BUCKET_FOTOS='energia-fotos';
+const supabase=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false}});
+const $=id=>document.getElementById(id); const val=id=>($(id)?.value||'').trim();
+let marker=null, geom=null, alt=null, actividad=null, toastTimer=null, photoCount=0;
+const map=L.map('map',{zoomControl:true,attributionControl:false}).setView([14.6349,-90.5069],8);
+L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{maxZoom:21}).addTo(map);
+const puntosGuardados=L.layerGroup().addTo(map);
+setTimeout(()=>map.invalidateSize(),400);
+function toast(t,ms=3200){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.style.display='none',ms)}
+function status(t,bad=false){$('coord').textContent=t;$('coord').classList.toggle('bad',bad);$('mapHint').textContent=t}
+function show(el){$(el).classList.remove('hidden')} function hide(el){$(el).classList.add('hidden')}
+function scrollToEl(id){setTimeout(()=>$(id)?.scrollIntoView({behavior:'smooth',block:'start'}),120)}
+function setPoint(lat,lng,a=null,zoom=true){alt=a;if(marker)map.removeLayer(marker);marker=L.marker([lat,lng],{draggable:true}).addTo(map);marker.on('dragend',()=>{const p=marker.getLatLng();setPoint(p.lat,p.lng,alt,false)});geom={type:'Point',coordinates:[lng,lat]};if(zoom)map.setView([lat,lng],18);status(`✅ Punto listo: ${lat.toFixed(6)}, ${lng.toFixed(6)}${a!=null?' | Alt. '+Number(a).toFixed(1)+' m':''}. Selecciona el tipo de reporte.`);show('actividadSection');setTimeout(()=>map.invalidateSize(),200);scrollToEl('actividadSection')}
+function crearPuntoGPS(){if(!navigator.geolocation){status('GPS no disponible. Toca el mapa para colocar el punto.',true);return}status('📍 Obteniendo ubicación actual...');navigator.geolocation.getCurrentPosition(p=>setPoint(p.coords.latitude,p.coords.longitude,p.coords.altitude,true),e=>{status('No se pudo obtener GPS. Toca el mapa para colocar el punto.',true);toast('⚠️ '+e.message,5000)},{enableHighAccuracy:true,timeout:15000,maximumAge:0})}
+map.on('click',e=>setPoint(e.latlng.lat,e.latlng.lng,alt,false));
+function checklist(items){return `<div class="checks">${items.map(i=>`<label class="check"><input type="checkbox" value="${i}"><span>${i}</span></label>`).join('')}</div>`}
+function materialesHTML(){return `<div class="label">Materiales utilizados</div><div id="materiales"></div><button id="btnMaterial" class="btn line" type="button">➕ Agregar material</button>`}
+function addMat(){const d=document.createElement('div');d.className='matRow';d.innerHTML='<input placeholder="Material"><input type="number" step="0.01" placeholder="Cant."><button type="button">×</button>';d.querySelector('button').onclick=()=>d.remove();$('materiales')?.appendChild(d)}
+function selectActividad(act){actividad=act;document.querySelectorAll('.reportOpt').forEach(b=>b.classList.toggle('selected',b.dataset.act===act));renderForm(act);show('formSection');show('fotoSection');if(photoCount===0)addPhoto(true);scrollToEl('formSection')}
+function renderForm(act){const data={
+inspeccion:{title:'🔎 Inspección técnica',fields:`<input id="id_poste" class="input" placeholder="ID poste / referencia"><input id="sector" class="input" placeholder="Sector / referencia visual"><div class="grid2"><select id="tipo_estructura" class="select"><option>Poste concreto</option><option>Poste madera</option><option>Poste metálico</option><option>Torre</option><option>Transformador</option><option>Línea</option></select><select id="nivel_tension" class="select"><option>Baja tensión</option><option>Media tensión</option><option>Alta tensión</option></select></div><select id="estado_general" class="select"><option>Bueno</option><option>Regular</option><option>Deteriorado</option><option>Crítico</option></select>`,checks:['Poste en buen estado','Transformador en buen estado','Conductores en buen estado','Aisladores en buen estado','Herrajes completos','Vegetación cercana','Acceso disponible','Requiere intervención','Requiere cambio de poste','Requiere cambio de transformador']},
+mantenimiento:{title:'🛠️ Mantenimiento',fields:`<input id="id_poste" class="input" placeholder="ID poste / tramo"><input id="sector" class="input" placeholder="Sector / referencia"><div class="grid2"><input id="tiempo_trabajo" class="input" type="number" placeholder="Tiempo min"><select id="estado_final_operativo" class="select"><option>Trabajo terminado</option><option>Requiere seguimiento</option><option>Pendiente de material</option><option>No se pudo ejecutar</option></select></div>`,checks:['Cambio de poste','Cambio de transformador','Cambio de conductor','Cambio de aislador','Ajuste de herrajes','Reparación de retenida','Limpieza de línea','Poda / liberación de línea','Corrección de empalme','Trabajo terminado']},
+falla:{title:'⚠️ Incidencia / falla',fields:`<input id="id_poste" class="input" placeholder="ID poste / referencia"><input id="sector" class="input" placeholder="Sector afectado"><div class="grid2"><input id="usuarios_afectados" class="input" type="number" placeholder="Usuarios afectados"><select id="nivel_riesgo" class="select"><option>Riesgo bajo</option><option>Riesgo medio</option><option>Riesgo alto</option><option>Riesgo crítico</option></select></div><select id="accion_inmediata" class="select"><option>Registrar y monitorear</option><option>Enviar cuadrilla</option><option>Aislar área</option><option>Atención urgente</option></select>`,checks:['Sin energía','Bajo voltaje','Cortocircuito','Conductor caído','Poste dañado','Transformador dañado','Aislador roto','Riesgo para personas','Riesgo para vehículos','Requiere atención urgente']}
+};
+const d=data[act]; $('formSection').innerHTML=`<div class="section"><div class="sectionTitle">${d.title}</div>${d.fields}<div class="label">Checklist de campo</div>${checklist(d.checks)}${act==='mantenimiento'?materialesHTML():''}<textarea id="observaciones" class="textarea" placeholder="Observaciones de campo"></textarea><div class="grid2"><select id="prioridad" class="select"><option>1 - Baja</option><option>2 - Media baja</option><option>3 - Media</option><option>4 - Alta</option><option>5 - Crítica</option></select><select id="estado_final" class="select"><option>Operativo</option><option>Requiere seguimiento</option><option>Pendiente de reparación</option><option>Fuera de servicio</option></select></div></div>`;
+if($('btnMaterial')){$('btnMaterial').onclick=addMat;addMat()}}
+function addPhoto(first=false){photoCount++;const id=`foto_${photoCount}`;const div=document.createElement('div');div.className='photoItem';div.innerHTML=`<label class="cameraLabel" for="${id}">📷 ${first?'Tomar foto principal':'Tomar otra foto'}</label><input id="${id}" class="photoInput" type="file" accept="image/*" capture="environment"><div class="filename">Sin foto</div>`;$('photoList').appendChild(div);div.querySelector('input').addEventListener('change',e=>{div.querySelector('.filename').textContent=e.target.files?.[0]?.name||'Sin foto'});}
+function wkt(){if(!geom)return null;const[x,y]=geom.coordinates;return`SRID=4326;POINT(${x} ${y})`}
+function checked(){return Array.from(document.querySelectorAll('#formSection input[type="checkbox"]:checked')).map(i=>i.value)}
+function materiales(){return Array.from(document.querySelectorAll('#materiales .matRow')).map(r=>{const i=r.querySelectorAll('input');return{material:i[0].value.trim(),cantidad:i[1].value?Number(i[1].value):null}}).filter(x=>x.material||x.cantidad)}
+function campos(){const o={};document.querySelectorAll('#formSection input,#formSection select,#formSection textarea').forEach(el=>{if(!el.id||el.type==='checkbox'||el.type==='file')return;o[el.id]=el.type==='number'&&el.value!==''?Number(el.value):el.value});o.checklist=checked();o.materiales=materiales();return o}
+async function subirFotos(){const fotos=[];const inputs=Array.from(document.querySelectorAll('.photoInput'));for(let idx=0;idx<inputs.length;idx++){const f=inputs[idx].files?.[0];if(!f)continue;const safe=f.name.replace(/[^a-zA-Z0-9._-]/g,'_');const path=`${Date.now()}_foto_${idx+1}_${Math.random().toString(36).slice(2)}_${safe}`;const up=await supabase.storage.from(BUCKET_FOTOS).upload(path,f,{upsert:false});if(up.error){fotos.push({tipo:`foto_${idx+1}`,nombre:f.name,error:up.error.message});continue}const pub=supabase.storage.from(BUCKET_FOTOS).getPublicUrl(path);fotos.push({tipo:`foto_${idx+1}`,nombre:f.name,path,url:pub.data.publicUrl})}return fotos}
+async function guardar(){if(!geom){toast('⚠️ Primero crea el punto.');return}if(!actividad){toast('⚠️ Selecciona el tipo de reporte.');return}toast('💾 Guardando...',9000);const fotos=await subirFotos();const label=document.querySelector(`.reportOpt[data-act="${actividad}"] b`)?.textContent||actividad;const reg={actividad_id:actividad,actividad:label,lat:geom.coordinates[1],lng:geom.coordinates[0],altitud_m:alt,datos_funcion:campos(),fotos, foto_principal:fotos[0]?.url||null,hallazgos:val('observaciones'),recomendaciones:'',prioridad:val('prioridad'),estado_final:val('estado_final'),firma_tecnico:'',geom:wkt(),fecha_hora:new Date().toISOString()};const {error}=await supabase.from(TABLE_NAME).insert([reg]);if(error){toast('❌ '+error.message,9000);return}toast('✅ Punto guardado.');await cargarPuntos();nuevo(false)}
+async function cargarPuntos(){const {data,error}=await supabase.from(TABLE_NAME).select('id,actividad,lat,lng,prioridad,estado_final,datos_funcion').order('created_at',{ascending:false}).limit(300);if(error)return;puntosGuardados.clearLayers();(data||[]).forEach(r=>{if(r.lat==null||r.lng==null)return;const color=r.actividad_id==='falla'?'#dc2626':r.actividad_id==='mantenimiento'?'#f59e0b':'#2563eb';puntosGuardados.addLayer(L.circleMarker([r.lat,r.lng],{radius:6,color:'#fff',weight:2,fillColor:color,fillOpacity:1}).bindPopup(`<b>${r.actividad||'Reporte'}</b><br>${r.datos_funcion?.id_poste||r.datos_funcion?.sector||''}<br>${r.prioridad||''}<br>${r.estado_final||''}`))})}
+function nuevo(borrar=true){actividad=null;document.querySelectorAll('.reportOpt').forEach(b=>b.classList.remove('selected'));hide('actividadSection');hide('formSection');hide('fotoSection');$('formSection').innerHTML='';$('photoList').innerHTML='';photoCount=0;if(borrar&&marker){map.removeLayer(marker);marker=null;geom=null;alt=null}status('Primero captura el punto. Luego selecciona el tipo de reporte.');$('scroll').scrollTo({top:0,behavior:'smooth'});setTimeout(()=>map.invalidateSize(),200)}
+$('btnCrearPunto').onclick=crearPuntoGPS;$('btnGuardar').onclick=guardar;$('btnNuevo').onclick=()=>nuevo(true);$('btnAddPhoto').onclick=()=>addPhoto(false);document.querySelectorAll('.reportOpt').forEach(b=>b.onclick=()=>selectActividad(b.dataset.act));cargarPuntos();
+</script>
+</body>
+</html>
